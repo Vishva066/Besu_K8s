@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: besu-bootnodes-configmap
+  labels:
+    app: besu-bootnodes-configmap
+data:
+  #Public key of the bootnode (Not an account only node)
+  bootnodePubKey: "4f1ab271f4dbd53b2cb0c8f55daa3d1ec315a7c8f130a09e54979aef41708792b18a903b6d96746fc6c4855459e69625f8a428d387692964f86b6a9d5888f128"

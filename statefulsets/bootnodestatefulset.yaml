@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bootnode
+  labels:
+    app: bootnode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bootnode
+  serviceName: besu-bootnode
+  template:
+    metadata:
+      labels:
+        app: bootnode
+    spec:
+      containers:
+      - name: bootnode
+        image: hyperledger/besu:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 150m
+            memory: 500Mi
+        env:
+          # - name: POD_IP
+          #   valueFrom:
+          #     fieldRef:
+          #       fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: BOOTNODE_PUBKEY
+            valueFrom:
+              configMapKeyRef:
+                name: besu-bootnodes-configmap
+                key: bootnodePubKey
+        volumeMounts:
+          - name: key
+            mountPath: /secrets
+            readOnly: true
+          - name: genesis-config
+            mountPath: /etc/genesis
+            readOnly: true
+          - name: config-toml
+            mountPath: /etc/besu
+            readOnly: true
+          - name: data
+            mountPath: /data
+        ports:
+        - containerPort: 8545
+          name: json-rpc
+          protocol: TCP
+        - containerPort: 30303
+          name: rlpx
+          protocol: TCP
+        - containerPort: 30303
+          name: discovery
+          protocol: UDP
+        command:
+          - /bin/sh
+          - -c
+        args:
+        - |
+          exec /opt/besu/bin/besu \
+            --node-private-key-file=/secrets/key \
+            --config-file=/etc/besu/config.toml \
+            --Xnat-kube-service-name=besu-bootnode \
+            --bootnodes=enode://${BOOTNODE_PUBKEY}@${BESU_BOOTNODE_SERVICE_HOST}:30303
+        # livenessProbe:
+        #   httpGet:
+        #     path: /liveness
+        #     port: 8545
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 30
+      volumes:
+        - name: key
+          secret:
+            secretName: besu-bootnode-key
+        - name: genesis-config
+          configMap:
+            name: besu-genesis-configmap
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

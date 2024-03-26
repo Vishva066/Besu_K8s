@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: besu-genesis-configmap
+  labels:
+    app: besu-genesis-configmap
+data:
+  genesis.json: |-
+    {
+      "config": {
+        "berlinBlock": 0,
+        "ethash": {
+          "fixeddifficulty": 1000
+        },
+        "chainID": "1100001"
+      },
+      "gasLimit": "0x1000000",
+      "difficulty": "0x10000",
+      "contractSizeLimit": "24576",
+      "alloc": {
+        "0x935c7111EBD8fb96F51CB8002C07B7a8Ad144Cca": {
+          "balance": "90000000000000000000000"
+        }
+      }
+    }
